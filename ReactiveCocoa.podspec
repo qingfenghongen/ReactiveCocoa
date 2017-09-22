@@ -1,29 +1,38 @@
 Pod::Spec.new do |s|
-  s.name         = "ReactiveCocoa"
-  s.version      = "6.1.0-alpha.2"
-  s.summary      = "Streams of values over time"
-  s.description  = <<-DESC
-                   ReactiveCocoa (RAC) is a Cocoa framework built on top of ReactiveSwift. It provides APIs for using ReactiveSwift with Apple's Cocoa frameworks.
-                   DESC
-  s.homepage     = "https://github.com/ReactiveCocoa/ReactiveCocoa"
-  s.license      = { :type => "MIT", :file => "LICENSE.md" }
-  s.author       = "ReactiveCocoa"
-
-  s.osx.deployment_target = "10.9"
-  s.ios.deployment_target = "8.0"
-  s.tvos.deployment_target = "9.0"
-  s.watchos.deployment_target = "2.0"
-
-  s.source       = { :git => "https://github.com/ReactiveCocoa/ReactiveCocoa.git", :tag => "#{s.version}" }
-  s.source_files = "ReactiveCocoa/*.{swift,h,m}", "ReactiveCocoa/Shared/*.{swift}"
-  s.private_header_files = "ReactiveCocoa/ObjCRuntimeAliases.h"
-  s.osx.source_files = "ReactiveCocoa/AppKit/*.{swift}"
-  s.ios.source_files = "ReactiveCocoa/UIKit/*.{swift}", "ReactiveCocoa/UIKit/iOS/*.{swift}"
-  s.tvos.source_files = "ReactiveCocoa/UIKit/*.{swift}"
-  s.watchos.exclude_files = "ReactiveCocoa/Shared/*.{swift}"
-  s.module_map = "ReactiveCocoa/module.modulemap"
-
-  s.dependency 'ReactiveSwift', '2.1.0-alpha.2'
-
-  s.pod_target_xcconfig = { "OTHER_SWIFT_FLAGS[config=Release]" => "-suppress-warnings" }
-end
++  s.name         = "ReactiveCocoa"
++  s.version      = "2.5.2"
++  s.summary      = "A framework for composing and transforming streams of values."
++  s.homepage     = "https://github.com/blog/1107-reactivecocoa-is-now-open-source"
++  s.author       = { "Josh Abernathy" => "josh@github.com" }
++  s.source       = { :git => "https://github.com/ReactiveCocoa/ReactiveCocoa.git",  :branch => "#{s.version}"}
++  s.license      = 'MIT'
++  s.description  = "ReactiveCocoa (RAC) is an Objective-C framework for Functional Reactive Programming. It provides APIs for composing and transforming streams of values."
++ 
++  s.requires_arc = true
++  s.ios.deployment_target = '6.0'
++  s.osx.deployment_target = '10.8'
++  s.default_subspecs = 'UI'
++  s.prepare_command = <<-'END'
++    find . \( -regex '.*EXT.*\.[mh]$' -o -regex '.*metamacros\.[mh]$' \) -execdir mv {} RAC{} \;
++    find . -regex '.*\.[hm]' -exec sed -i '' -E 's@"(EXT.*|metamacros)\.h"@"RAC\1.h"@' {} \;
++    find . -regex '.*\.[hm]' -exec sed -i '' -E 's@<ReactiveCocoa/(EXT.*)\.h>@<ReactiveCocoa/RAC\1.h>@' {} \;
++  END
++
++  s.subspec 'no-arc' do |sp|
++    sp.source_files = 'ReactiveCocoa/RACObjCRuntime.{h,m}'
++    sp.requires_arc = false
++  end
++
++  s.subspec 'UI' do |sp|
++    sp.dependency 'ReactiveCocoa/Core'
++    sp.source_files = 'ReactiveCocoa/*{AppKit,NSControl,NSText,UI,MK}*'
++    sp.ios.exclude_files = 'ReactiveCocoa/*{AppKit,NSControl,NSText}*'
++    sp.osx.exclude_files = 'ReactiveCocoa/*{UI,MK}*'
++  end
++
++  s.subspec 'Core' do |sp|
++    sp.dependency 'ReactiveCocoa/no-arc'
++    sp.source_files = ["ReactiveCocoa/*.{d,h,m}", "ReactiveCocoa/extobjc/*.{h,m}"]
++    sp.private_header_files = 'ReactiveCocoa/*Private.h'
++    sp.exclude_files = 'ReactiveCocoa/*{RACObjCRuntime,AppKit,NSControl,NSText,UIActionSheet,UI,MK}*'
++  end
